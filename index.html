@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logo Memory Game</title>
+    <title>Memory Spel</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,27 +14,24 @@
             margin: 0;
             background-color: #f0f0f0;
         }
-        .game-container {
+        #game-container {
+            position: relative;
+            width: fit-content;
+        }
+        #game-board {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(4, 150px);
+            grid-gap: 20px;
         }
         .card {
             width: 150px;
             height: 150px;
-            background-color: #3498db;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 14px;
-            font-weight: bold;
-            color: white;
+            background-color: #fff;
+            border-radius: 15px;
+            border: 5px solid #333;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
             cursor: pointer;
-            transition: transform 0.3s;
             perspective: 1000px;
-        }
-        .card:hover {
-            transform: scale(1.05);
         }
         .card-inner {
             position: relative;
@@ -52,89 +49,194 @@
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
+            border-radius: 15px;
+        }
+        .card-front {
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2rem;
+        }
+        .card-back {
+            background-color: #fff;
+            transform: rotateY(180deg);
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .card-back {
-            background-color: #2ecc71;
-            transform: rotateY(180deg);
-        }
         .card-back img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 100px;
+            max-height: 100px;
+        }
+        #congrats {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 3rem;
+            text-align: center;
+        }
+        #game-board.blurred {
+            filter: blur(5px);
+        }
+        #message {
+            background-color: #4CAF50;
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
+        }
+        #score {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: green;
         }
     </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="card" onclick="flipCard(this)">
-            <div class="card-inner">
-                <div class="card-front">?</div>
-                <div class="card-back"><img src="https://wijzijnweb.nl/app/themes/sage10/public/images/warempel.a2ba18.svg" alt="Warempel"></div>
-            </div>
-        </div>
-        <div class="card" onclick="flipCard(this)">
-            <div class="card-inner">
-                <div class="card-front">?</div>
-                <div class="card-back"><img src="https://wijzijnweb.nl/app/themes/sage10/public/images/exapps.2c682b.svg" alt="Exapps"></div>
-            </div>
-        </div>
-        <div class="card" onclick="flipCard(this)">
-            <div class="card-inner">
-                <div class="card-front">?</div>
-                <div class="card-back"><img src="https://wijzijnweb.nl/app/themes/sage10/public/images/bigfat.29d087.svg" alt="BIG FAT Internet"></div>
-            </div>
-        </div>
-        <div class="card" onclick="flipCard(this)">
-            <div class="card-inner">
-                <div class="card-front">?</div>
-                <div class="card-back"><img src="https://wijzijnweb.nl/app/themes/sage10/public/images/warempel.a2ba18.svg" alt="Warempel"></div>
-            </div>
-        </div>
-        <div class="card" onclick="flipCard(this)">
-            <div class="card-inner">
-                <div class="card-front">?</div>
-                <div class="card-back"><img src="https://wijzijnweb.nl/app/themes/sage10/public/images/exapps.2c682b.svg" alt="Exapps"></div>
-            </div>
-        </div>
-        <div class="card" onclick="flipCard(this)">
-            <div class="card-inner">
-                <div class="card-front">?</div>
-                <div class="card-back"><img src="https://wijzijnweb.nl/app/themes/sage10/public/images/bigfat.29d087.svg" alt="BIG FAT Internet"></div>
-            </div>
-        </div>
-    </div>
 
-    <script>
-        let flippedCards = [];
+<div id="game-container">
+    <div id="score">0/8</div>
+    <div id="game-board"></div>
+</div>
+<div id="congrats">
+    <div id="message">GOED ZO!</div>
+</div>
 
-        function flipCard(card) {
-            if (flippedCards.length < 2 && !card.classList.contains('flipped')) {
-                card.classList.add('flipped');
-                flippedCards.push(card);
+<script>
+    const cardsArray = [
+        { name: "AI", img: "" },
+        { name: "ChatGPT", img: "" },
+        { name: "Oude IJsselstreek", img: "" },
+        { name: "STROIJ", img: "" },
+        { name: "Logo1", img: "https://i.imgur.com/o3mQa2h.png" },
+        { name: "Logo2", img: "https://i.imgur.com/EjLq8KO.png" },
+        { name: "Logo3", img: "https://i.imgur.com/MCOzHMb.png" },
+        { name: "Logo4", img: "https://i.imgur.com/4tpOG78.png" }
+    ];
 
-                if (flippedCards.length === 2) {
-                    setTimeout(checkMatch, 1000);
+    let gameGrid;
+    let firstCard = null;
+    let secondCard = null;
+    let lockBoard = false;
+    let matchedPairs = 0;
+    let attempts = 0;
+    const gameBoard = document.getElementById('game-board');
+    const congratsMessage = document.getElementById('congrats');
+    const scoreDisplay = document.getElementById('score');
+
+    // Function to initialize the game
+    function initializeGame() {
+        gameBoard.innerHTML = ''; // Clear the board
+        congratsMessage.style.display = 'none'; // Hide the congratulations message
+        gameBoard.classList.remove('blurred'); // Remove blur effect
+        matchedPairs = 0; // Reset the matched pairs
+        attempts = 0; // Reset the attempts
+        updateScore(); // Reset the score display
+        gameGrid = [...cardsArray, ...cardsArray].sort(() => 0.5 - Math.random()); // Shuffle the cards
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+
+        // Generate the game board with shuffled cards
+        gameGrid.forEach((cardData, index) => {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">?</div>
+                    <div class="card-back">${cardData.img ? `<img src="${cardData.img}" alt="${cardData.name}">` : `<span>${cardData.name}</span>`}</div>
+                </div>
+            `;
+            card.addEventListener('click', () => flipCard(card, cardData));
+            gameBoard.appendChild(card);
+        });
+    }
+
+    // Function to flip cards
+    function flipCard(card, cardData) {
+        if (lockBoard || card === firstCard?.cardElement) return;
+        card.classList.add('flipped');
+
+        if (!firstCard) {
+            firstCard = { cardElement: card, data: cardData };
+        } else {
+            secondCard = { cardElement: card, data: cardData };
+            attempts++; // Increment attempts after each flip of two cards
+            updateScore(); // Update score display
+            checkForMatch();
+        }
+    }
+
+    // Function to check if two flipped cards match
+    function checkForMatch() {
+        lockBoard = true;
+        const isMatch = firstCard.data.name === secondCard.data.name;
+        setTimeout(() => {
+            if (isMatch) {
+                matchedPairs++;
+                firstCard.cardElement.removeEventListener('click', flipCard);
+                secondCard.cardElement.removeEventListener('click', flipCard);
+                resetBoard();
+                if (matchedPairs === cardsArray.length) {
+                    showCongrats(); // Show congrats only when all pairs are matched
                 }
-            }
-        }
-
-        function checkMatch() {
-            const [card1, card2] = flippedCards;
-            const logo1 = card1.querySelector('.card-back img').src;
-            const logo2 = card2.querySelector('.card-back img').src;
-
-            if (logo1 === logo2) {
-                card1.style.visibility = 'hidden';
-                card2.style.visibility = 'hidden';
             } else {
-                card1.classList.remove('flipped');
-                card2.classList.remove('flipped');
+                firstCard.cardElement.classList.remove('flipped');
+                secondCard.cardElement.classList.remove('flipped');
+                resetBoard();
             }
+        }, 1000);
+    }
 
-            flippedCards = [];
+    // Reset board variables after a match/no-match check
+    function resetBoard() {
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
+    }
+
+    // Show the congratulatory message and blur the board
+    function showCongrats() {
+        gameBoard.classList.add('blurred');
+        congratsMessage.style.display = 'flex';
+
+        // Add event listener for restarting the game
+        document.addEventListener('click', restartGame);
+        document.addEventListener('keydown', restartGame);
+    }
+
+    // Function to restart the game
+    function restartGame() {
+        document.removeEventListener('click', restartGame);
+        document.removeEventListener('keydown', restartGame);
+        initializeGame();
+    }
+
+    // Function to update the score display
+    function updateScore() {
+        scoreDisplay.textContent = `${attempts}/8`;
+        if (attempts > 8) {
+            scoreDisplay.style.color = 'orange';
+        } else {
+            scoreDisplay.style.color = 'green';
         }
-    </script>
+    }
+
+    // Initialize the game on page load
+    initializeGame();
+
+</script>
+
 </body>
 </html>
