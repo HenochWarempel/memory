@@ -8,19 +8,24 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
             background-color: #f0f0f0;
         }
+        #game-container {
+            position: relative;
+            width: fit-content;
+        }
         #game-board {
             display: grid;
+            grid-template-columns: repeat(4, 150px);
             grid-gap: 20px;
-            justify-content: center;
         }
         .card {
+            width: 150px;
+            height: 150px;
             background-color: #fff;
             border-radius: 15px;
             border: 5px solid #333;
@@ -62,8 +67,8 @@
             align-items: center;
         }
         .card-back img {
-            max-width: 80%;
-            max-height: 80%;
+            max-width: 100px;
+            max-height: 100px;
         }
         #congrats {
             display: none;
@@ -78,7 +83,6 @@
             color: white;
             font-size: 3rem;
             text-align: center;
-            cursor: pointer;
         }
         #game-board.blurred {
             filter: blur(5px);
@@ -90,46 +94,21 @@
             box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
         }
         #score {
+            position: absolute;
+            top: -40px;
+            right: 0;
             font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-
-        /* Responsiveness */
-        @media (min-width: 1024px) {
-            #game-board {
-                grid-template-columns: repeat(4, 150px);
-            }
-            .card {
-                width: 150px;
-                height: 150px;
-            }
-        }
-
-        @media (min-width: 768px) and (max-width: 1023px) {
-            #game-board {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            .card {
-                width: 100px;
-                height: 100px;
-            }
-        }
-
-        @media (max-width: 767px) {
-            #game-board {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .card {
-                width: 100px;
-                height: 100px;
-            }
+            font-weight: bold;
+            color: green;
         }
     </style>
 </head>
 <body>
 
-<div id="score">Score: 0</div>
-<div id="game-board"></div>
+<div id="game-container">
+    <div id="score">0/8</div>
+    <div id="game-board"></div>
+</div>
 <div id="congrats">
     <div id="message">GOED ZO!</div>
 </div>
@@ -146,22 +125,30 @@
         { name: "Logo4", img: "https://i.imgur.com/4tpOG78.png" }
     ];
 
-    let gameGrid = [...cardsArray, ...cardsArray].sort(() => 0.5 - Math.random());
-    const gameBoard = document.getElementById('game-board');
-    const congratsMessage = document.getElementById('congrats');
-    const scoreElement = document.getElementById('score');
+    let gameGrid;
     let firstCard = null;
     let secondCard = null;
     let lockBoard = false;
     let matchedPairs = 0;
+    let attempts = 0;
+    const gameBoard = document.getElementById('game-board');
+    const congratsMessage = document.getElementById('congrats');
+    const scoreDisplay = document.getElementById('score');
 
     // Function to initialize the game
     function initializeGame() {
-        gameBoard.innerHTML = '';
-        matchedPairs = 0;
-        scoreElement.innerHTML = 'Score: 0';
-        gameGrid = [...cardsArray, ...cardsArray].sort(() => 0.5 - Math.random());
+        gameBoard.innerHTML = ''; // Clear the board
+        congratsMessage.style.display = 'none'; // Hide the congratulations message
+        gameBoard.classList.remove('blurred'); // Remove blur effect
+        matchedPairs = 0; // Reset the matched pairs
+        attempts = 0; // Reset the attempts
+        updateScore(); // Reset the score display
+        gameGrid = [...cardsArray, ...cardsArray].sort(() => 0.5 - Math.random()); // Shuffle the cards
+        firstCard = null;
+        secondCard = null;
+        lockBoard = false;
 
+        // Generate the game board with shuffled cards
         gameGrid.forEach((cardData, index) => {
             const card = document.createElement('div');
             card.classList.add('card');
@@ -185,6 +172,8 @@
             firstCard = { cardElement: card, data: cardData };
         } else {
             secondCard = { cardElement: card, data: cardData };
+            attempts++; // Increment attempts after each flip of two cards
+            updateScore(); // Update score display
             checkForMatch();
         }
     }
@@ -196,7 +185,6 @@
         setTimeout(() => {
             if (isMatch) {
                 matchedPairs++;
-                updateScore();
                 firstCard.cardElement.removeEventListener('click', flipCard);
                 secondCard.cardElement.removeEventListener('click', flipCard);
                 resetBoard();
@@ -211,11 +199,6 @@
         }, 1000);
     }
 
-    // Update the score
-    function updateScore() {
-        scoreElement.innerHTML = `Score: ${matchedPairs}`;
-    }
-
     // Reset board variables after a match/no-match check
     function resetBoard() {
         firstCard = null;
@@ -227,19 +210,32 @@
     function showCongrats() {
         gameBoard.classList.add('blurred');
         congratsMessage.style.display = 'flex';
-        congratsMessage.addEventListener('click', restartGame);
+
+        // Add event listener for restarting the game
+        document.addEventListener('click', restartGame);
+        document.addEventListener('keydown', restartGame);
     }
 
-    // Restart the game
+    // Function to restart the game
     function restartGame() {
-        congratsMessage.style.display = 'none';
-        gameBoard.classList.remove('blurred');
+        document.removeEventListener('click', restartGame);
+        document.removeEventListener('keydown', restartGame);
         initializeGame();
-        congratsMessage.removeEventListener('click', restartGame);
+    }
+
+    // Function to update the score display
+    function updateScore() {
+        scoreDisplay.textContent = `${attempts}/8`;
+        if (attempts > 8) {
+            scoreDisplay.style.color = 'orange';
+        } else {
+            scoreDisplay.style.color = 'green';
+        }
     }
 
     // Initialize the game on page load
     initializeGame();
+
 </script>
 
 </body>
